@@ -12,4 +12,4 @@ val client = HttpClient {
 }
 
 suspend fun fetchUsers(): List<User> =
-    client.get("http://localhost:8080/users").body()
+    client.get("http://localhost:$SERVER_PORT/users").body()
