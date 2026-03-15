@@ -39,7 +39,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.familytree.shared"
+    namespace = "com.example.sipangwingwi.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

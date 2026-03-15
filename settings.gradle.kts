@@ -1,4 +1,4 @@
-rootProject.name = "FamilyTree"
+rootProject.name = "Sipangwingwi"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

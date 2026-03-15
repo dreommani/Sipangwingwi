@@ -5,10 +5,10 @@ plugins {
     kotlin("plugin.serialization") version "2.0.0"
 }
 
-group = "com.example.familytree"
+group = "com.example.sipangwingwi"
 version = "1.0.0"
 application {
-    mainClass.set("com.example.familytree.ApplicationKt")
+    mainClass.set("com.example.sipangwingwi.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
