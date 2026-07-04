@@ -1,82 +1,134 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Server.
+# Sipangwingwi
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Kotlin Multiplatform project with a shared Compose UI, shared models, and a Ktor backend.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Structure
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+- `composeApp` - Compose Multiplatform app for Android, iOS, JS, and Wasm.
+- `shared` - common Kotlin code used by both the app and backend.
+- `server` - JVM backend built with Ktor.
+- `iosApp` - iOS app entry point that hosts the shared Compose UI.
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+## Backend
 
-### Build and Run Android Application
+The backend starts from:
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+```text
+server/src/main/kotlin/com/example/sipangwingwi/Application.kt
+```
 
-### Build and Run Server
+It runs a Ktor Netty server on port `8081` and exposes:
 
-To build and run the development version of the server, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :server:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :server:run
-  ```
+- `GET /` - basic greeting response.
+- `GET /health` - health check endpoint.
+- `GET /users` - returns users from the database as JSON.
 
-### Build and Run Web Application
+JSON serialization is handled by Ktor Content Negotiation with kotlinx.serialization.
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
-- for the Wasm target (faster, modern browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-- for the JS target (slower, supports older browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-    ```
+## Database
 
-### Build and Run iOS Application
+Database setup is in:
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+```text
+server/src/main/kotlin/com/example/sipangwingwi/Database.kt
+```
 
----
+The backend uses:
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+- PostgreSQL
+- HikariCP for connection pooling
+- Exposed ORM for table definitions and queries
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+Current local database config:
+
+```text
+Database: family_tree
+Host: localhost
+Port: 5432
+User: postgres
+Password: postgres
+```
+
+The backend creates a `users` table if it does not already exist.
+
+## Shared Code
+
+The `shared` module contains common models and constants.
+
+Important shared files:
+
+- `models/User.kt` - serializable user model shared by app and backend.
+- `Constants.kt` - shared server port constant.
+- `Greeting.kt` - common greeting logic.
+
+## App
+
+The shared Compose UI lives in:
+
+```text
+composeApp/src/commonMain/kotlin/com/example/sipangwingwi/App.kt
+```
+
+Platform entry points call the same `App()` function for Android, iOS, and Web.
+
+An API client exists at:
+
+```text
+composeApp/src/commonMain/kotlin/com/example/sipangwingwi/ApiClient.kt
+```
+
+It can call the backend `/users` endpoint, but the current UI does not display users yet.
+
+## Run
+
+Run the backend:
+
+```powershell
+.\gradlew.bat :server:run
+```
+
+Build Android:
+
+```powershell
+.\gradlew.bat :composeApp:assembleDebug
+```
+
+Run Web Wasm:
+
+```powershell
+.\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
+```
+
+Run iOS:
+
+Open the `iosApp` folder in Xcode and run the app from there. The iOS app uses the shared Compose UI from `composeApp`.
+
+## Keep Backend Running On Windows
+
+Yes, the backend can run as a background process on your PC.
+
+For development, run it manually:
+
+```powershell
+.\gradlew.bat :server:run
+```
+
+For an always-running local setup on Windows, the best approach is usually to package the backend and run it as a Windows service using a tool like NSSM, or create a Windows Task Scheduler task that starts the backend when you log in.
+
+Before doing that, build the backend:
+
+```powershell
+.\gradlew.bat :server:installDist
+```
+
+Then the generated server start script will be in:
+
+```text
+server/build/install/server/bin/server.bat
+```
+
+That script can be used by Task Scheduler or a Windows service manager.
+
+## Notes
+
+This is currently a development setup. Database credentials are hardcoded and should be moved to environment variables or config before production use.
