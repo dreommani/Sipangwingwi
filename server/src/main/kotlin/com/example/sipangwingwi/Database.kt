@@ -47,6 +47,34 @@ object StockMovementTable : Table("stock_movements") {
     override val primaryKey = PrimaryKey(id)
 }
 
+object BusinessTable : Table("businesses") {
+    val id = varchar("id", 64)
+    val name = varchar("name", 255)
+    val ownerName = varchar("owner_name", 255)
+    val phone = varchar("phone", 64)
+    val activeBranchId = varchar("active_branch_id", 64).nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+object BranchTable : Table("branches") {
+    val id = varchar("id", 64)
+    val businessId = varchar("business_id", 64).references(BusinessTable.id)
+    val name = varchar("name", 255)
+    val isActive = bool("is_active")
+    override val primaryKey = PrimaryKey(id)
+}
+
+object EmployeeTable : Table("employees") {
+    val employeeId = varchar("employee_id", 64)
+    val businessId = varchar("business_id", 64).references(BusinessTable.id)
+    val branchId = varchar("branch_id", 64).nullable()
+    val name = varchar("name", 255)
+    val role = varchar("role", 32)
+    val pinHash = varchar("pin_hash", 128)
+    val isActive = bool("is_active")
+    override val primaryKey = PrimaryKey(employeeId)
+}
+
 fun connectToDatabase() {
     println("Initializing database connection...")
     try {
@@ -66,7 +94,15 @@ fun connectToDatabase() {
             // Log SQL statements to console
             addLogger(StdOutSqlLogger)
             
-            SchemaUtils.create(UserTable, ProductTable, BranchStockTable, StockMovementTable)
+            SchemaUtils.create(
+                UserTable,
+                ProductTable,
+                BranchStockTable,
+                StockMovementTable,
+                BusinessTable,
+                BranchTable,
+                EmployeeTable
+            )
             seedInventoryIfNeeded()
             
             val count = UserTable.selectAll().count()
